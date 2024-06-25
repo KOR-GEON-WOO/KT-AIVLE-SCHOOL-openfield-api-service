@@ -7,4 +7,14 @@ class Farm(models.Model):
     longitude = models.IntegerField()
 
     def __str__(self):
-        return self.farm_id
+        return self.farm_owner
+
+class FarmStatusLog(models.Model):
+    farm_status_log_id = models.AutoField(primary_key=True)
+    farm_status = models.IntegerField()
+    farm_created = models.DateTimeField(auto_now_add=True)
+    farm = models.ForeignKey(Farm, related_name='status_logs', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
+    user_id = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.farm} - Status {self.farm_status}"
