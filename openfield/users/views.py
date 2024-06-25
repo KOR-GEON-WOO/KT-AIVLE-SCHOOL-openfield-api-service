@@ -24,8 +24,6 @@ class UserLoginAPIView(APIView):
 
         # 사용자 인증
         user = authenticate(username=username, password=password)
-        print("#@@@@@@@@")
-        print(user)
         if user:
             # 사용자가 존재하면 토큰 생성
             token, created = Token.objects.get_or_create(user=user)
@@ -38,16 +36,9 @@ class UserLogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
     def post(self, request):
-        username = request.data.get('username')
-        # if not username:
-        #     return Response({'error': 'username 파라미터를 제공해야 합니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # try:
-        #     user = CustomUser.objects.get(username=username)
-        #     token = Token.objects.get(user=user)
-        #     token.delete()
-        #     return Response({'detail': f'{username} 사용자의 로그아웃이 완료되었습니다.'}, status=status.HTTP_200_OK)
-        # except CustomUser.DoesNotExist:
-        #     return Response({'detail': f'{username} 사용자가 존재하지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        # except Token.DoesNotExist:
-        #     return Response({'detail': f'{username} 사용자는 이미 로그아웃 되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+       if request.method == 'POST':
+        try:
+            request.user.auth_token.delete()
+            return Response({'detail': '사용자의 로그아웃이 완료되었습니다.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
