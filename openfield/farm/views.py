@@ -45,3 +45,7 @@ class FarmStatusLogListView(generics.ListAPIView):
             for item in serializer.data
         ]
         return Response(data)
+
+class FarmStatusLogDetailView(generics.RetrieveAPIView):
+    queryset = FarmStatusLog.objects.all()
+    serializer_class = FarmStatusLogSerializer
