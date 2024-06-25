@@ -27,5 +27,13 @@
   - [x] 토지 상세에 대한 엔드포인트를 적어주세요. (GET /farms/detail/<int:pk>/) // 이때 pk는 farm_status_log_id 입니다.
   - [x] 성공 시 json 데이터를 응답한다.
   - [] 실패 시 메시지를 반환한다.
+- [] Admin 페이지에 보여줄 수 있다.
+  - [] User를 보여줄 수 있다.
+  - [] Farm을 보여줄 수 있다.
+  - [] Farm detail을 보여줄 수 있다.
+  - [] Create Farm이 가능하다.
+  - [] Update Farm이 가능하다.
+  - [] Delete Farm이 가능하다.
+
 
 - (향후) 회원에 따른 미들웨어, 모델링 등
