@@ -1,9 +1,9 @@
 # farm/urls.py
 from django.urls import path
-from .views import FarmStatusLogListView,FarmStatusLogDetailView
+from .views import FarmListAPIView,FarmStatusLogListAPIView
 
 app_name = 'farm'
 urlpatterns = [
-    path('list/', FarmStatusLogListView.as_view(), name='list'),
-    path('detail/<int:pk>/', FarmStatusLogDetailView.as_view(), name='detail'),
+    path('list/', FarmListAPIView.as_view(), name='list'),
+    path('detail/<int:pk>/', FarmStatusLogListAPIView.as_view(), name='detail'),
 ]

@@ -20,8 +20,8 @@
   - [x] 토지 model을 만든다.
 - [x] 토지 리스트를 제공할 수 있다.
   - [x] 토지 리스트에 대한 엔드포인트를 적어주세요. (GET /farms/list/)
-  - [x] 페이지네이션을 할 수 있다.
-  - [x] 필터링을 지원한다.
+  - [x] 페이지네이션을 할 수 있다.                  GET farms/list/?page=2
+  - [x] 필터링을 지원한다.                         GET /list/?farm_created=20230101
   - [x] 성공 시 json 데이터를 응답한다.
 - [x] 토지 상세를 제공할 수 있다.
   - [x] 토지 상세에 대한 엔드포인트를 적어주세요. (GET /farms/detail/<int:pk>/) // 이때 pk는 farm_status_log_id 입니다.

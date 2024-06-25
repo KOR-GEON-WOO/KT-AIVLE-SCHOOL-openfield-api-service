@@ -4,7 +4,7 @@ from .models import Farm, FarmStatusLog
 class FarmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farm
-        fields = ['farm_id', 'farm_owner', 'latitude', 'longitude']
+        fields = '__all__'
 
 class FarmStatusLogSerializer(serializers.ModelSerializer):
     farm = FarmSerializer()

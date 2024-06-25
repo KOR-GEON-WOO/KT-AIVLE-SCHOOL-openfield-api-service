@@ -1,51 +1,44 @@
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from .models import FarmStatusLog
-from .serializers import FarmStatusLogSerializer
+from django.utils import timezone
+from django.db.models import Q
+from datetime import datetime
+from .models import Farm, FarmStatusLog
+from .serializers import FarmSerializer, FarmStatusLogSerializer
 
-class FarmStatusLogListView(generics.ListAPIView):
-    serializer_class = FarmStatusLogSerializer
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 10  # 페이지당 보여줄 항목 수 설정
+# 페이지네이션 설정
+class FarmPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+    
+# Farm 모델의 데이터를 리스트 조회하는 view
+class FarmListAPIView(generics.ListAPIView):
+    serializer_class = FarmSerializer
+    pagination_class = FarmPagination  # 페이지네이션 클래스 설정
 
     def get_queryset(self):
-        farm_created = self.request.query_params.get('farm_created', None)
-        if farm_created:
-            queryset = FarmStatusLog.objects.filter(farm_created=farm_created)
-        else:
-            queryset = FarmStatusLog.objects.all()
+        queryset = Farm.objects.all()
+
+        # farm_created 필터링 기준으로 받기
+        farm_created_param = self.request.query_params.get('farm_created', None)
+        if farm_created_param:
+            try:
+                farm_created_date = datetime.strptime(farm_created_param, '%Y%m%d').date()
+                # farm_created_date를 기준으로 필터링
+                queryset = queryset.filter(
+                    status_logs__farm_created__date__gte=farm_created_date
+                ).distinct()
+            except ValueError:
+                # 날짜 형식이 올바르지 않은 경우 처리
+                queryset = Farm.objects.none()  # 빈 쿼리셋 반환
+
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.serializer_class(page, many=True)
-            data = [
-                {
-                    'farm_id': item.farm.farm_id,
-                    'farm_owner': item.farm.farm_owner,
-                    'latitude': item.farm.latitude,
-                    'longitude': item.farm.longitude
-                }
-                for item in serializer.data
-            ]
-            return self.get_paginated_response(data)
-
-        serializer = self.serializer_class(queryset, many=True)
-        data = [
-            {
-                'farm_id': item.farm.farm_id,
-                'farm_owner': item.farm.farm_owner,
-                'latitude': item.farm.latitude,
-                'longitude': item.farm.longitude
-            }
-            for item in serializer.data
-        ]
-        return Response(data)
-
-class FarmStatusLogDetailView(generics.RetrieveAPIView):
-    queryset = FarmStatusLog.objects.all()
+# FarmStatusLog 모델의 데이터를 조회하는 view
+class FarmStatusLogListAPIView(generics.ListAPIView):
     serializer_class = FarmStatusLogSerializer
+    
+    def get_queryset(self):
+        farm_id = self.kwargs['pk']
+        return FarmStatusLog.objects.filter(farm_id=farm_id)
