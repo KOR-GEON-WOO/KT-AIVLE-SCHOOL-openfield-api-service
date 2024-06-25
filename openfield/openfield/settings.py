@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "users",
     "farm",
-    "rest_framework.authtoken"
+    "rest_framework.authtoken",
+    "drf_yasg"
 ]
 AUTH_USER_MODEL = 'users.CustomUser'
 REST_FRAMEWORK = {
