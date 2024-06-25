@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Q
 from datetime import datetime
 from .models import Farm, FarmStatusLog
-from .serializers import FarmSerializer, FarmStatusLogSerializer
+from .serializers import *
 
 # 페이지네이션 설정
 class FarmPagination(PageNumberPagination):
@@ -14,7 +14,7 @@ class FarmPagination(PageNumberPagination):
     
 # Farm 모델의 데이터를 리스트 조회하는 view
 class FarmListAPIView(generics.ListAPIView):
-    serializer_class = FarmSerializer
+    serializer_class = FarmListSerializer
     pagination_class = FarmPagination  # 페이지네이션 클래스 설정
 
     def get_queryset(self):
@@ -35,10 +35,7 @@ class FarmListAPIView(generics.ListAPIView):
 
         return queryset
 
-# FarmStatusLog 모델의 데이터를 조회하는 view
-class FarmStatusLogListAPIView(generics.ListAPIView):
-    serializer_class = FarmStatusLogSerializer
-    
-    def get_queryset(self):
-        farm_id = self.kwargs['pk']
-        return FarmStatusLog.objects.filter(farm_id=farm_id)
+# Farm 모델
+class FarmDetailView(generics.RetrieveAPIView):
+    serializer_class = FarmDetailSerializer
+    queryset = Farm.objects.all()

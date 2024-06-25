@@ -24,7 +24,7 @@
   - [x] 필터링을 지원한다.                         GET /list/?farm_created=20230101
   - [x] 성공 시 json 데이터를 응답한다.
 - [x] 토지 상세를 제공할 수 있다.
-  - [x] 토지 상세에 대한 엔드포인트를 적어주세요. (GET /farms/detail/<int:pk>/) // 이때 pk는 farm_status_log_id 입니다.
+  - [x] 토지 상세에 대한 엔드포인트를 적어주세요. (GET /farms/detail/<int:pk>/) // 이때 pk는 farm_id 입니다.
   - [x] 성공 시 json 데이터를 응답한다.
   - [X] 실패 시 메시지를 반환한다.  // 실패시 404 오류 내장 
 - [] Admin 페이지에 보여줄 수 있다.
