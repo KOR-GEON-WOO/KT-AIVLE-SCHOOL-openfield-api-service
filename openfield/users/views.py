@@ -8,6 +8,8 @@ from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from django.conf import settings
 
 class UserCreateAPIView(APIView):
     def post(self, request):
@@ -27,7 +29,12 @@ class UserLoginAPIView(APIView):
         if user:
             # 사용자가 존재하면 토큰 생성
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
+             # 토큰을 쿠키에 저장
+            response = Response({'token': token.key}, status=status.HTTP_200_OK)
+            expiry = timezone.now() + settings.AUTH_TOKEN_EXPIRY 
+            response.set_cookie(key='auth_token', value=token.key, expires=expiry)
+            
+            return response        
         else:
             # 사용자가 존재하지 않으면 인증 실패 메시지 반환
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

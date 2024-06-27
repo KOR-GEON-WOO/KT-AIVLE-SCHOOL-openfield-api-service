@@ -5,6 +5,9 @@ from django.db.models import Q
 from datetime import datetime
 from .models import Farm, FarmStatusLog
 from .serializers import *
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.permissions import IsAuthenticated
 
 # 페이지네이션 설정
 class FarmPagination(PageNumberPagination):
@@ -13,7 +16,10 @@ class FarmPagination(PageNumberPagination):
     max_page_size = 100
     
 # Farm 모델의 데이터를 리스트 조회하는 view
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    
     serializer_class = FarmListSerializer
     pagination_class = FarmPagination  # 페이지네이션 클래스 설정
 
@@ -36,6 +42,9 @@ class FarmListAPIView(generics.ListAPIView):
         return queryset
 
 # Farm 모델
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmDetailView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    
     serializer_class = FarmDetailSerializer
     queryset = Farm.objects.all()
