@@ -5,6 +5,8 @@ class Farm(models.Model):
     farm_owner = models.CharField(max_length=255)
     latitude = models.IntegerField()
     longitude = models.IntegerField()
+    farm_name = models.CharField(max_length=255, default='Unknown')  
+    farm_size = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
 
     def __str__(self):
         return self.farm_owner
