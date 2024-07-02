@@ -17,6 +17,7 @@ class FarmStatusLog(models.Model):
     farm_created = models.DateTimeField(auto_now_add=True)
     farm = models.ForeignKey(Farm, related_name='status_logs', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
     user_id = models.IntegerField()
+    farm_photo = models.ImageField(upload_to='farm_image')
 
     def __str__(self):
         return f"{self.farm} - Status {self.farm_status}"

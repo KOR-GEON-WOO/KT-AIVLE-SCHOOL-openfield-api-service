@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_yasg",
     "corsheaders",
+    "storages",
 ]
 AUTH_USER_MODEL = 'users.CustomUser'
 REST_FRAMEWORK = {
@@ -139,3 +140,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS allow all ips
 CORS_ALLOW_ALL_ORIGINS = True
+
+###########################AWS
+AWS_ACCESS_KEY_ID = 'AKIAWUR2CWHYQ7LIZ3OR' 
+AWS_SECRET_ACCESS_KEY = '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' 
+AWS_REGION = 'ap-northeast-2'
+
+###S3 Storages
+AWS_STORAGE_BUCKET_NAME = 'openfield-s3' # 설정한 버킷 이름
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME,AWS_REGION)
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'path/to/store/my/files/')
