@@ -42,4 +42,5 @@
   - [] DB에 farm_id 와 이미지 URL을 저장하는 테이블을 새로 생성한다. 
   - [] DB 테이블에 저장된 URL을 farm detail View 반환시 Response로 반환 가능하다. 
   - [] (추가) DB에 저장된 이미지 URL을 삭제시 AWS S3 버킷에 저장된 이미지도 같이 삭제됨.
+  - [X] AWS 접근 key 를 따로 저장하고 .gitignore 할 수 있다.
 - (향후) 회원에 따른 미들웨어, 모델링 등
