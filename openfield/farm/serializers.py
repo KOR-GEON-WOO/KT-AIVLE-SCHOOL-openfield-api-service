@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Farm, FarmStatusLog
+from .models import Farm, FarmStatusLog, FarmImage
 
 class FarmListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,8 +11,14 @@ class FarmStatusLogSerializer(serializers.ModelSerializer):
         model = FarmStatusLog
         fields = ['farm_status_log_id', 'farm_status', 'farm_created', 'user_id']
 
+class FarmImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FarmImage
+        fields = ['farm_image']
+
 class FarmDetailSerializer(serializers.ModelSerializer):
     status_logs = FarmStatusLogSerializer(many=True, read_only=True)
+    image = FarmImageSerializer(read_only=True)
     
     class Meta:
         model = Farm
