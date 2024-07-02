@@ -32,5 +32,5 @@ class FarmStatusLog(models.Model):
         return f"{self.farm} - Status {self.farm_status}"
     
 class FarmImage(models.Model):
-    farm = models.ForeignKey(Farm, related_name='image', on_delete=models.CASCADE)
-    farm_image = models.ImageField(upload_to=generate_farm_image_filename, null=True, blank=True)
+    farm = models.OneToOneField(Farm, related_name='image', on_delete=models.CASCADE)
+    farm_image = models.ImageField(upload_to=generate_farm_image_filename, blank=True)
