@@ -1,4 +1,14 @@
 from django.db import models
+import uuid
+import os
+from datetime import datetime
+from django.db import models
+
+def generate_farm_image_filename(instance, filename):
+    extension = filename.split('.')[-1]
+    date_str = datetime.now().strftime('%Y%m%d')
+    new_filename = f"{uuid.uuid4()}_{date_str}.{extension}"
+    return os.path.join('farm_image', new_filename)
 
 class Farm(models.Model):
     farm_id = models.AutoField(primary_key=True)
@@ -17,7 +27,7 @@ class FarmStatusLog(models.Model):
     farm_created = models.DateTimeField(auto_now_add=True)
     farm = models.ForeignKey(Farm, related_name='status_logs', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
     user_id = models.IntegerField()
-    farm_image = models.ImageField(upload_to='farm_image')
+    farm_image = models.ImageField(upload_to=generate_farm_image_filename, null=True, blank=True)
 
     def __str__(self):
         return f"{self.farm} - Status {self.farm_status}"
