@@ -1,5 +1,12 @@
 from mySetting import NAVER_API_CLIENT_ID, NAVER_API_CLIENT_SECRET  
 import requests
+import boto3
+import logging
+import uuid
+import os
+from datetime import datetime
+from django.conf import settings
+logger = logging.getLogger(__name__)
 
 def get_satellite_image(x, y):
         url = 'https://naveropenapi.apigw.ntruss.com/map-static/v2/raster'
@@ -26,3 +33,21 @@ def get_satellite_image(x, y):
         else:
             error_msg = f"이미지를 다운로드하는 중 오류가 발생했습니다. 상태 코드: {response.status_code}, 응답: {response.text}"
             raise ValueError(error_msg)
+
+def generate_farm_image_filename(instance, filename):
+    extension = filename.split('.')[-1]
+    date_str = datetime.now().strftime('%Y%m%d')
+    new_filename = f"{uuid.uuid4()}_{date_str}.{extension}"
+    return os.path.join('farm_image', new_filename)
+
+# S3에서 파일 삭제하는 함수
+def delete_s3_file(file_name):
+    try:
+        s3 = boto3.client('s3',
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                          region_name=settings.AWS_REGION)
+        bucket = settings.AWS_STORAGE_BUCKET_NAME
+        s3.delete_object(Bucket=bucket, Key=file_name)
+    except Exception as e:
+        logger.error(f"Error deleting file from S3: {e}")

@@ -1,20 +1,10 @@
 from django.db import models
-import uuid
-import os
-from datetime import datetime
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch import receiver
-from django.conf import settings
-import boto3
 import logging
+from .utils import delete_s3_file, generate_farm_image_filename
 logger = logging.getLogger(__name__)
-
-def generate_farm_image_filename(instance, filename):
-    extension = filename.split('.')[-1]
-    date_str = datetime.now().strftime('%Y%m%d')
-    new_filename = f"{uuid.uuid4()}_{date_str}.{extension}"
-    return os.path.join('farm_image', new_filename)
 
 class Farm(models.Model):
     farm_id = models.AutoField(primary_key=True)
@@ -40,18 +30,6 @@ class FarmStatusLog(models.Model):
 class FarmImage(models.Model):
     farm = models.OneToOneField(Farm, related_name='image', on_delete=models.CASCADE)
     farm_image = models.ImageField(upload_to=generate_farm_image_filename, blank=True)
-
-# S3에서 파일 삭제하는 함수
-def delete_s3_file(file_name):
-    try:
-        s3 = boto3.client('s3',
-                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                          region_name=settings.AWS_REGION)
-        bucket = settings.AWS_STORAGE_BUCKET_NAME
-        s3.delete_object(Bucket=bucket, Key=file_name)
-    except Exception as e:
-        logger.error(f"Error deleting file from S3: {e}")
 
 # S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
 @receiver(pre_delete, sender=FarmImage)
