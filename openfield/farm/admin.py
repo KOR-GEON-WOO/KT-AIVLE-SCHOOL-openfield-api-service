@@ -60,7 +60,7 @@ class FarmAdmin(admin.ModelAdmin):
                     farm_owner = row.get('고유번호')
                     latitude = float(row.get('위도', 0.0))
                     longitude = float(row.get('경도', 0.0))
-                    farm_name = row.get('지목', 'Unknown')
+                    farm_name = row.get('주소', 'Unknown')
                     farm_size = Decimal(row.get('토지면적', 0.0))
 
                     farm = Farm.objects.create(
