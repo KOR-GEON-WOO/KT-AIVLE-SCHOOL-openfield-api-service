@@ -38,6 +38,7 @@ class FarmAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
 
+    # TODO: utils의 detection 함수 사용해서 결과 저장
     def upload_csv(self, request):
         if request.method == "POST":
             csv_file = request.FILES.get("csv_file")

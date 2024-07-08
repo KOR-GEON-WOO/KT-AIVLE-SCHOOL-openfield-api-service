@@ -51,3 +51,12 @@ def delete_s3_file(file_name):
         s3.delete_object(Bucket=bucket, Key=file_name)
     except Exception as e:
         logger.error(f"Error deleting file from S3: {e}")
+        
+# TODO: 토지 객체 탐지 후 FarmObjectDetectionImage(FODI) 모델에 결과 저장
+# S3에 제대로 들어가는지 확인
+def object_detection(farm):
+    return 
+
+# TODO: Farm과 FODI 모델을 합쳐서 폴리곤 안 객체를 탐지
+def polygon_detection(farm):
+    return

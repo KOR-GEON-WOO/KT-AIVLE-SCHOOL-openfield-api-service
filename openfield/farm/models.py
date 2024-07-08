@@ -6,6 +6,7 @@ import logging
 from .utils import delete_s3_file, generate_farm_image_filename
 logger = logging.getLogger(__name__)
 
+# TODO: 폴리곤 객체탐지에 필요한 컬럼 추가
 class Farm(models.Model):
     farm_id = models.AutoField(primary_key=True)
     farm_owner = models.CharField(max_length=255)
@@ -30,6 +31,17 @@ class FarmStatusLog(models.Model):
 class FarmImage(models.Model):
     farm = models.OneToOneField(Farm, related_name='image', on_delete=models.CASCADE)
     farm_image = models.ImageField(upload_to=generate_farm_image_filename, blank=True)
+
+# TODO: Object detection 결과 (x, y좌표와 레이블 값이 담긴 text) 컬럼 필요
+# x, y, conf, class 어떻게 저장해야할까
+class FarmObjectDetectionImage(models.Model):
+    farm = models.ForeignKey(Farm, related_name='od_image', on_delete=models.CASCADE)
+    farm_od_image = models.ImageField(upload_to=generate_farm_image_filename)
+
+# TODO: 폴리곤 객체탐지 결과
+class FarmPolygonDetectionImage(models.Model):
+    farm = models.ForeignKey(Farm, related_name='pd_image', on_delete=models.CASCADE)
+    farm_pd_image = models.ImageField(upload_to=generate_farm_image_filename)
 
 # S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
 @receiver(pre_delete, sender=FarmImage)
