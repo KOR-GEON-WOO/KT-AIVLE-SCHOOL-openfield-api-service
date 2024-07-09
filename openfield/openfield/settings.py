@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "corsheaders",
     "storages",
+    "chatbot",
 ]
 AUTH_USER_MODEL = 'users.CustomUser'
 REST_FRAMEWORK = {
