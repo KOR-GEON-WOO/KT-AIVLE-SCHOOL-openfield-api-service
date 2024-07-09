@@ -57,7 +57,7 @@ class FarmAdmin(admin.ModelAdmin):
                 file_data = raw_data.decode(encoding).splitlines()
                 csv_reader = csv.DictReader(file_data)
                 for row in csv_reader:
-                    farm_owner = row.get('고유번호')
+                    farm_owner = row.get('소유구분')
                     latitude = float(row.get('위도', 0.0))
                     longitude = float(row.get('경도', 0.0))
                     farm_name = row.get('주소', 'Unknown')
