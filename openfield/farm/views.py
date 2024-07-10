@@ -24,7 +24,7 @@ class FarmListAPIView(generics.ListAPIView):
     pagination_class = FarmPagination  # 페이지네이션 클래스 설정
 
     def get_queryset(self):
-        queryset = Farm.objects.all()
+        queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=0)
 
         # farm_created 필터링 기준으로 받기
         farm_created_param = self.request.query_params.get('farm_created', None)
@@ -47,4 +47,22 @@ class FarmDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     
     serializer_class = FarmDetailSerializer
-    queryset = Farm.objects.all()
+    queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=0)
+    
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class FarmIbDetectedListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    
+    serializer_class = FarmListSerializer
+    pagination_class = FarmPagination  # 페이지네이션 클래스 설정
+
+    def get_queryset(self):
+        queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=1)
+        return queryset
+        
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class FarmIbDetectedDetailView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    
+    serializer_class = FarmDetailSerializer
+    queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=1)

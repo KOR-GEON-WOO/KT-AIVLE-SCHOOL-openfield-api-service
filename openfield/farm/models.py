@@ -21,16 +21,17 @@ class FarmStatusLog(models.Model):
     farm_status_log_id = models.AutoField(primary_key=True)
     farm_status = models.IntegerField()
     farm_created = models.DateTimeField(auto_now_add=True)
-    farm = models.ForeignKey(Farm, related_name='status_log', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
+    farm = models.ForeignKey(Farm, related_name='status_logs', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
     user_id = models.IntegerField()
 
     def __str__(self):
         return f"{self.farm} - Status {self.farm_status}"
     
 class FarmIllegalBuildingLog(models.Model):
+    farm = models.OneToOneField(Farm, on_delete=models.CASCADE)
     farm_illegal_building_log_id=models.AutoField(primary_key=True)
     farm_illegal_building_status=models.IntegerField()
-    farm = models.ForeignKey(Farm,related_name='illegal_log',on_delete=models.CASCADE)
+    farm_ib_log_created = models.DateTimeField(auto_now_add=True)
     
 class FarmImage(models.Model):
     farm = models.OneToOneField(Farm, related_name='image', on_delete=models.CASCADE)
