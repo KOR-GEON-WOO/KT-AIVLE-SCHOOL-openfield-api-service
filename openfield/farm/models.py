@@ -6,7 +6,6 @@ import logging
 from .utils import delete_s3_file, generate_farm_image_filename
 logger = logging.getLogger(__name__)
 
-# TODO: 폴리곤 객체탐지에 필요한 컬럼 추가
 class Farm(models.Model):
     farm_id = models.AutoField(primary_key=True)
     farm_owner = models.CharField(max_length=255)
@@ -14,7 +13,7 @@ class Farm(models.Model):
     longitude = models.FloatField()
     farm_name = models.CharField(max_length=255, default='Unknown')  
     farm_size = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
-
+    farm_geometry = models.CharField(max_length=255 ,default='') # 폴리곤 객체를 넣을거면 포스트큐엘 쓰라고 해서 string 넣음
     def __str__(self):
         return self.farm_owner
 
@@ -22,11 +21,16 @@ class FarmStatusLog(models.Model):
     farm_status_log_id = models.AutoField(primary_key=True)
     farm_status = models.IntegerField()
     farm_created = models.DateTimeField(auto_now_add=True)
-    farm = models.ForeignKey(Farm, related_name='status_logs', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
+    farm = models.ForeignKey(Farm, related_name='status_log', on_delete=models.CASCADE)  # farm을 사용하는게 관례라고해서 수정 
     user_id = models.IntegerField()
 
     def __str__(self):
         return f"{self.farm} - Status {self.farm_status}"
+    
+class FarmIllegalBuildingLog(models.Model):
+    farm_illegal_building_log_id=models.AutoField(primary_key=True)
+    farm_illegal_building_status=models.IntegerField()
+    farm = models.ForeignKey(Farm,related_name='illegal_log',on_delete=models.CASCADE)
     
 class FarmImage(models.Model):
     farm = models.OneToOneField(Farm, related_name='image', on_delete=models.CASCADE)
@@ -36,12 +40,18 @@ class FarmImage(models.Model):
 # x, y, conf, class 어떻게 저장해야할까
 class FarmObjectDetectionImage(models.Model):
     farm = models.ForeignKey(Farm, related_name='od_image', on_delete=models.CASCADE)
-    farm_od_image = models.ImageField(upload_to=generate_farm_image_filename)
+    farm_object_x = models.FloatField()
+    farm_object_y = models.FloatField()
+    farm_object_conf=models.FloatField()
+    farm_object_class_id= models.IntegerField()
+    farm_boxes_num_elemnets=models.IntegerField()
+    farm_Detection_image=models.ImageField(upload_to=generate_farm_image_filename,blank=True)
 
-# TODO: 폴리곤 객체탐지 결과
+
 class FarmPolygonDetectionImage(models.Model):
-    farm = models.ForeignKey(Farm, related_name='pd_image', on_delete=models.CASCADE)
-    farm_pd_image = models.ImageField(upload_to=generate_farm_image_filename)
+    farm = models.OneToOneField(Farm, on_delete=models.CASCADE)
+    farm_pd_image = models.ImageField(upload_to=generate_farm_image_filename,blank=True)
+
 
 # S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
 @receiver(pre_delete, sender=FarmImage)

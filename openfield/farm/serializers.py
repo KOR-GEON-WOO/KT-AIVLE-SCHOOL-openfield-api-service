@@ -15,7 +15,7 @@ class FarmImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = FarmImage
         fields = ['farm_image']
-# TODO: 객체탐지 및 폴리곤탐지 serializer 추가
+
 class FarmDetailSerializer(serializers.ModelSerializer):
     status_logs = FarmStatusLogSerializer(many=True, read_only=True)
     image = FarmImageSerializer(read_only=True)
