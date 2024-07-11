@@ -60,6 +60,12 @@ def delete_s3_file_on_delete(sender, instance, **kwargs):
     if instance.farm_image:
         delete_s3_file(instance.farm_image.name)
 
+# S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
+@receiver(pre_delete, sender=FarmPolygonDetectionImage)
+def delete_s3_file_on_delete(sender, instance, **kwargs):
+    if instance.farm_pd_image:
+        delete_s3_file(instance.farm_pd_image.name)
+
 # S3에서 파일 삭제하는 신호 처리기 (이미지 필드를 비울 때)
 @receiver(pre_save, sender=FarmImage)
 def delete_s3_file_on_clear(sender, instance, **kwargs):
@@ -73,6 +79,23 @@ def delete_s3_file_on_clear(sender, instance, **kwargs):
 
     old_file = old_instance.farm_image
     new_file = instance.farm_image
+
+    if not new_file and old_file:  # 이미지가 비워질 때
+        delete_s3_file(old_file.name)
+        
+# S3에서 파일 삭제하는 신호 처리기 (이미지 필드를 비울 때)
+@receiver(pre_save, sender=FarmPolygonDetectionImage)
+def delete_s3_file_on_clear(sender, instance, **kwargs):
+    if not instance.pk:
+        return False  # 새 객체인 경우 무시
+
+    try:
+        old_instance = FarmPolygonDetectionImage.objects.get(pk=instance.pk)
+    except FarmPolygonDetectionImage.DoesNotExist:
+        return False
+
+    old_file = old_instance.farm_pd_image
+    new_file = instance.farm_pd_image
 
     if not new_file and old_file:  # 이미지가 비워질 때
         delete_s3_file(old_file.name)
