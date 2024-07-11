@@ -157,12 +157,11 @@ def polygon_function(center_lat, center_lon, coords):
 
     return polygon
 
-def csv_exception(self,request,csv_file):
+def csv_exception(self, request, csv_file):
     if not csv_file:
         self.message_user(request, "CSV 파일을 선택해 주세요", level=messages.ERROR)
-        return HttpResponseRedirect(request.path_info)
+        return None  
     if not csv_file.name.endswith('.csv'):
         self.message_user(request, "CSV 파일이 아닙니다", level=messages.ERROR)
-        return HttpResponseRedirect(request.path_info)
-    csv_file = request.FILES.get("csv_file")
-    return csv_file
+        return None  
+    return csv_file  

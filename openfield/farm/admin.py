@@ -14,7 +14,7 @@ from PIL import Image, UnidentifiedImageError, ImageDraw,ImageFont
 from io import BytesIO
 import pandas as pd
 from shapely.geometry import Polygon
-from .utils import get_satellite_image, string_to_polygon, polygon_function, make_result_df, point_in_polygon
+from .utils import get_satellite_image, string_to_polygon, polygon_function, make_result_df, point_in_polygon,csv_exception
 import cv2
 import numpy as np
 class CSVUploadForm(forms.Form):
@@ -51,11 +51,8 @@ class FarmAdmin(admin.ModelAdmin):
     def upload_csv(self, request):
         if request.method == "POST":
             csv_file = request.FILES.get("csv_file")
-            if not csv_file:
-                self.message_user(request, "CSV 파일을 선택해 주세요", level=messages.ERROR)
-                return HttpResponseRedirect(request.path_info)
-            if not csv_file.name.endswith('.csv'):
-                self.message_user(request, "CSV 파일이 아닙니다", level=messages.ERROR)
+            csv_file = csv_exception(self,request, csv_file) 
+            if csv_file is None: 
                 return HttpResponseRedirect(request.path_info)
 
             try:
