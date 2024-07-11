@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("farms/", include('farm.urls')),
     path("users/", include('users.urls')),
+    path("chatbot/", include('chatbot.urls')),
 ]
 
 # Swagger
