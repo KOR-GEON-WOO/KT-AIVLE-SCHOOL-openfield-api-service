@@ -64,5 +64,5 @@ class FarmIbDetectedListAPIView(generics.ListAPIView):
 class FarmIbDetectedDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     
-    serializer_class = FarmDetailSerializer
+    serializer_class = FarmPolygonDetectionDetailSerializer
     queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=1)

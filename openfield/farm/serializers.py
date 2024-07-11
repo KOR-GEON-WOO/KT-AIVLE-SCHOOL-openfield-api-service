@@ -35,6 +35,7 @@ class FarmDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class FarmPolygonDetectionDetailSerializer(serializers.ModelSerializer):
+    status_logs = FarmStatusLogSerializer(many=True, read_only=True)
     illegal_logs = FarmIllegalBuildingLogSerializer(many=True, read_only=True)
     pd_image = FarmPolygonDetectionImageSerializer(read_only=True)
     
