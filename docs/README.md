@@ -56,3 +56,10 @@
   - [ ] 객체 탐지, 폴리곤 안 객체 탐지 결과를 detail view에 보여줄 수 있다.
   - [ ] (Advanced) 폴리곤과 객체를 시각화할 수 있다.
 - (향후) 회원에 따른 미들웨어, 모델링 등
+- [x] chatbot 기능.
+  - [x] 질문에 따른 답변 값을 return 한다.
+  - [x] 질문에 따른 답변 값에 대한 엔드포인트를 적어주세요. (POST /chatbot/chat)
+  - [x] chroma db를 사용하였다.
+  - [x] chroma db에 저장되어 있는 정보와 유사도가 낮은 질문을 3회 이상 할 경우 관련 없는 질문을 한다는 return값을 반환한다.
+  - [ ] SESSION CLEAR 할 수 있다
+  - [x] SESSION CLEAR 엔드포인트를 적어주세요. (GET /chatbot/clear-session/)
