@@ -50,7 +50,7 @@ class FarmObjectDetectionImage(models.Model):
 
 
 class FarmPolygonDetectionImage(models.Model):
-    farm = models.OneToOneField(Farm, on_delete=models.CASCADE)
+    farm = models.OneToOneField(Farm, related_name='pd_image', on_delete=models.CASCADE)
     farm_pd_image = models.ImageField(upload_to=generate_farm_image_filename,blank=True)
 
 
