@@ -194,3 +194,8 @@ class FarmPolygonDetectionImageAdmin(admin.ModelAdmin):
         return obj.farm_pd_image.url if obj.farm_pd_image else '-'
 
     farm_pd_image_url.short_description = 'Farm Polygon Detection Image URL'
+    
+@admin.register(FarmIllegalBuildingLog)
+class FarmIllgalBuildingLogAdmin(admin.ModelAdmin):
+    list_display = ('farm', 'farm_illegal_building_status')
+    
