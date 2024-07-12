@@ -96,7 +96,7 @@ class FarmAdmin(admin.ModelAdmin):
                         
                         # FarmImage 모델에 이미지 저장
                         image_content = get_satellite_image(longitude, latitude)
-                        image = Image.open(BytesIO(image_content))  # 여기 수정 
+                        image = Image.open(BytesIO(image_content))  
                         
                         farm_image = FarmImage.objects.create(
                             farm=farm,
