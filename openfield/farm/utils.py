@@ -8,13 +8,19 @@ import os
 from datetime import datetime
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponseRedirect
-from PIL import Image, ImageDraw
+from PIL import Image,UnidentifiedImageError
 from ultralytics import YOLO
 from pyproj import Transformer
 import math
 from shapely.geometry import Polygon, Point
 import pandas as pd
+import chardet
+from decimal import Decimal
+from io import BytesIO
+from django.core.files.base import ContentFile
+import numpy as np
+import cv2
+
 logger = logging.getLogger(__name__)
 
 def get_satellite_image(x, y):
@@ -165,3 +171,111 @@ def csv_exception(self, request, csv_file):
         self.message_user(request, "CSV 파일이 아닙니다", level=messages.ERROR)
         return None  
     return csv_file  
+
+def read_csv_file(csv_file):
+    raw_data = csv_file.read()
+    result = chardet.detect(raw_data)
+    encoding = result['encoding'] if result['encoding'] is not None else 'utf-8'
+    return raw_data, encoding
+
+def preprocess_dataframe(csv_file, raw_data, encoding):
+    csv_file.seek(0)  # 파일 포인터를 처음으로 되돌림
+    df = pd.read_csv(BytesIO(raw_data), encoding=encoding)
+    df['geometry'] = df['geometry'].apply(string_to_polygon)
+    df['pixel_polygon'] = df.apply(lambda row: polygon_function(row['위도'], row['경도'], row['geometry']), axis=1)
+    return df
+
+def decode_raw_data(raw_data, encoding):
+    return raw_data.decode(encoding).splitlines()
+
+def create_farm(row):
+    from .models import Farm  # 지연 로딩
+    farm_owner = row.get('소유구분')
+    latitude = float(row.get('위도', 0.0))
+    longitude = float(row.get('경도', 0.0))
+    farm_name = row.get('주소', 'Unknown')
+    farm_size = Decimal(row.get('토지면적', 0.0))
+    farm_geometry = string_to_polygon(row.get('geometry'))
+
+    return Farm.objects.create(
+        farm_owner=farm_owner,
+        latitude=latitude,
+        longitude=longitude,
+        farm_name=farm_name,
+        farm_size=farm_size,
+        farm_geometry=farm_geometry,
+    )
+
+def create_farm_status_log(farm, row):
+    from .models import FarmStatusLog  # 지연 로딩
+    farm_status = int(row.get('상태', 1))
+    user_id = int(row.get('사용자', 1))
+    FarmStatusLog.objects.create(
+        farm=farm,
+        farm_status=farm_status,
+        user_id=user_id,
+    )
+
+def process_farm_images(self, request, farm, row):
+    from .models import FarmImage # 지연 로딩
+    try:
+        image_content = get_satellite_image(farm.longitude, farm.latitude)
+        image = Image.open(BytesIO(image_content))
+
+        FarmImage.objects.create(
+            farm=farm,
+            farm_image=ContentFile(image_content, f"farm_image_{farm.farm_id}.jpg")
+        )
+
+        polygon = polygon_function(farm.latitude, farm.longitude, farm.farm_geometry)
+        model_result_df = make_result_df(image)
+        model_result_df['inside_polygon'] = None
+
+        image = draw_detected_objects(image, model_result_df, polygon, farm)
+        save_farm_polygon_image(image, farm)
+
+    except UnidentifiedImageError:
+        self.message_user(request, "이미지를 열 수 없습니다. 파일이 손상되었거나 지원되지 않는 형식일 수 있습니다.", level=messages.ERROR)
+    except Exception as e:
+        self.message_user(request, f"이미지 처리 중 오류 발생: {e}", level=messages.ERROR)
+
+def draw_detected_objects(image, model_result_df, polygon, farm):
+    from .models import FarmIllegalBuildingLog  # 지연 로딩
+    image = np.array(image)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cnt = 0
+    for i, df_row in model_result_df.iterrows():
+        if point_in_polygon(df_row['x'], df_row['y'], polygon):
+            draw_rectangle(image, df_row, font)
+            cnt = update_farm_illegal_building_log(df_row, farm, cnt)
+    if cnt == 0:
+        FarmIllegalBuildingLog.objects.create(farm=farm, farm_illegal_building_status=0)
+    return Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
+def draw_rectangle(image, df_row, font):
+    top_left = (int(df_row['x'] - df_row['width'] / 2), int(df_row['y'] - df_row['height'] / 2))
+    top_left_text = (int(df_row['x'] - df_row['width'] / 2), int(df_row['y'] - df_row['height'] / 2) - 6)
+    bottom_right = (int(df_row['x'] + df_row['width'] / 2), int(df_row['y'] + df_row['height'] / 2))
+    
+    colors = {0: (0, 0, 255), 1: (255, 0, 0), 2: (0, 255, 0)}
+    color = colors.get(df_row['class'], (0, 0, 0))
+    cv2.rectangle(image, top_left, bottom_right, color, 3)
+    cv2.putText(image, str(round(df_row['conf'], 2)), top_left_text, font, 0.5, color, 1, cv2.LINE_AA)
+
+def update_farm_illegal_building_log(df_row, farm, cnt):
+    from .models import FarmIllegalBuildingLog  # 지연 로딩
+    if df_row['class'] == 0 and cnt == 0:
+        FarmIllegalBuildingLog.objects.create(farm=farm, farm_illegal_building_status=1)
+        cnt = 1
+    return cnt
+
+def save_farm_polygon_image(image, farm):
+    from .models import FarmPolygonDetectionImage  # 지연 로딩
+    output = BytesIO()
+    image.save(output, format='JPEG')
+    new_filename = f"{farm.farm_id}_{datetime.now().strftime('%Y%m%d')}.jpg"
+    FarmPolygonDetectionImage.objects.create(
+        farm=farm,
+        farm_pd_image=ContentFile(output.getvalue(), new_filename)
+    )
+    output.close()
