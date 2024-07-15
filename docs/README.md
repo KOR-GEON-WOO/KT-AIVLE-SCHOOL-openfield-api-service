@@ -63,3 +63,13 @@
   - [x] chroma db에 저장되어 있는 정보와 유사도가 낮은 질문을 3회 이상 할 경우 관련 없는 질문을 한다는 return값을 반환한다.
   - [ ] SESSION CLEAR 할 수 있다
   - [x] SESSION CLEAR 엔드포인트를 적어주세요. (GET /chatbot/clear-session/)
+- [ ] 사용자 권한별로 view 구분 
+  - [ ] 토큰을 주었을때 관리자인지 사용자인지 구분할 수 있게
+  - [ ] 사용자 list view - 유휴 농지 중 임대 가능한 농지 
+  - [ ] 사용자 detail page view - 유휴농지 중 임대 가능한 농지
+  - [x] 관리자 list view - 유휴 농지
+  - [x] 관리자 detail page view - 유휴농지 
+  - [x] 관리자 list view - 불법 건축물
+  - [ ] 관리자 detail page view - 불법 건축물 -> 불법 건축물 확인 필요 
+  - [ ] 관리자 mypage - 사용자가 임대 신청한 농지 리스트
+  - [ ] 사용자 mypage - 사용자가 임대 신청한 농지 리스트 
