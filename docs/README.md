@@ -65,11 +65,11 @@
   - [x] SESSION CLEAR 엔드포인트를 적어주세요. (GET /chatbot/clear-session/)
 - [ ] 사용자 권한별로 view 구분 
   - [ ] 토큰을 주었을때 관리자인지 사용자인지 구분할 수 있게
-  - [ ] 사용자 list view - 유휴 농지 중 임대 가능한 농지 
-  - [ ] 사용자 detail page view - 유휴농지 중 임대 가능한 농지
+  - [x] 사용자 list view - 유휴 농지 중 임대 가능한 농지 
+  - [x] 사용자 detail page view - 유휴농지 중 임대 가능한 농지
   - [x] 관리자 list view - 유휴 농지
   - [x] 관리자 detail page view - 유휴농지 
   - [x] 관리자 list view - 불법 건축물
-  - [ ] 관리자 detail page view - 불법 건축물 -> 불법 건축물 확인 필요 
+  - [x] 관리자 detail page view - 불법 건축물 -> 불법 건축물 확인 필요 
   - [ ] 관리자 mypage - 사용자가 임대 신청한 농지 리스트
   - [ ] 사용자 mypage - 사용자가 임대 신청한 농지 리스트 
