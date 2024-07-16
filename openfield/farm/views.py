@@ -112,6 +112,7 @@ class FarmUserDetailView(generics.RetrieveAPIView):
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmUserMypageListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = FarmStatusLogSerializer
     
     def get_queryset(self):
         user_id = self.request.user.id
@@ -122,6 +123,7 @@ class FarmUserMypageListView(generics.ListAPIView):
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmAdminMypageListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
+    serializer_class = FarmStatusLogSerializer
     
     def get_queryset(self):
         queryset = FarmStatusLog.objects.filter(farm_status=2).all() 
@@ -130,7 +132,8 @@ class FarmAdminMypageListView(generics.ListAPIView):
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmAdminMypageDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAdminUser]
-
+    serializer_class = FarmStatusLogSerializer
+    
     def post(self, request):
         
         user_id=request.data.get("user_id")
