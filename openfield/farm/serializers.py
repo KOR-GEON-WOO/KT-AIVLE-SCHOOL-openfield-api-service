@@ -10,6 +10,15 @@ class FarmStatusLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = FarmStatusLog
         fields = ['farm_status_log_id', 'farm_status', 'farm_created', 'user_id']
+        
+class FarmStatusLogMypageSerializer(serializers.ModelSerializer):
+    farm_name = serializers.CharField(source='farm.farm_name', read_only=True)
+    farm_id = serializers.IntegerField(source='farm.farm_id', read_only=True)
+
+    class Meta:
+        model = FarmStatusLog
+        fields = ['farm_status_log_id', 'farm_status',
+                  'farm_created', 'user_id', 'farm_name', 'farm_id']
 
 class FarmIllegalBuildingLogSerializer(serializers.ModelSerializer):
     class Meta:

@@ -123,7 +123,7 @@ class FarmUserMypageListView(generics.ListAPIView):
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmAdminMypageListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
-    serializer_class = FarmStatusLogSerializer
+    serializer_class = FarmStatusLogMypageSerializer
     
     def get_queryset(self):
         queryset = FarmStatusLog.objects.filter(farm_status=2).all() 
