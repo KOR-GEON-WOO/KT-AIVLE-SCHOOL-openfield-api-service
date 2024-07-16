@@ -1,7 +1,5 @@
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from django.utils import timezone
-from django.db.models import Q
 from django.db.models import OuterRef, Subquery
 from datetime import datetime
 from .models import Farm, FarmStatusLog
@@ -91,16 +89,68 @@ class FarmUserDetailView(generics.RetrieveAPIView):
         queryset = get_user_farms()
         return queryset
     
+    def post(self, request, *args, **kwargs):
+        #TODO: 가장 최근 farm_status 로그가 상태가 1인지 확인 하기! 
+        latest_status_id = request.data.get('farm_status_log_id')
+        queryset = FarmStatusLog.objects.filter(farm_status_log_id=latest_status_id)
+
+        if queryset.exists():
+            user_id = request.user.id
+            farm_id = self.kwargs.get('pk')
+            farm = Farm.objects.get(pk=farm_id)
+    
+            # FarmStatusLog 객체 생성
+            FarmStatusLog.objects.create(
+                farm=farm,
+                farm_status=2,
+                user_id=user_id
+            )
+        else:
+            pass
+
 # 사용자 mypage list view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmUserMypageListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user_id = self.request.user.id
+        queryset = FarmStatusLog.objects.filter(user_id=user_id).all()
+        return queryset
     
 # 관리자 mypage list view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmAdminMypageListView(generics.ListAPIView):
     permission_classes = [IsAdminUser]
     
+    def get_queryset(self):
+        queryset = FarmStatusLog.objects.filter(farm_status=2).all() 
+        return queryset
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class FarmAdminMypageDetailView(generics.RetrieveAPIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        
+        user_id=request.data.get("user_id")
+        latest_status_log=request.data.get("farm_status_log_id")
+        queryset = FarmStatusLog.objects.filter(farm_status_log_id=latest_status_log)
+        if queryset.exists():
+            # user_id = request.user.id 위에 있는 user_id 겹침
+            farm_id = self.kwargs.get('pk')
+            farm = Farm.objects.get(pk=farm_id)
+    
+            # FarmStatusLog 객체 생성
+            FarmStatusLog.objects.create(
+                farm=farm,
+                farm_status=3,
+                user_id=user_id
+            )
+        else:
+            pass
+        return
+
 def get_user_farms():
     latest_farm_status_log = FarmStatusLog.objects.filter(
         farm=OuterRef('pk')

@@ -71,5 +71,5 @@
   - [x] 관리자 detail page view - 유휴농지 
   - [x] 관리자 list view - 불법 건축물
   - [x] 관리자 detail page view - 불법 건축물 -> 불법 건축물 확인 필요 
-  - [ ] 관리자 mypage - 사용자가 임대 신청한 농지 리스트
+  - [ ] 관리자 mypage - 사용자가 임대 신청한 농지 리스트 
   - [ ] 사용자 mypage - 사용자가 임대 신청한 농지 리스트 

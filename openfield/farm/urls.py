@@ -10,4 +10,7 @@ urlpatterns = [
     path('user/detail/<int:pk>/', FarmUserDetailView.as_view(), name='userDetail'),
     path('iblist/', FarmIbDetectedListAPIView.as_view(), name='iblist'),
     path('ibdetail/<int:pk>/', FarmIbDetectedDetailView.as_view(), name='ibdetail'),
+    path('user/mypage/', FarmUserMypageListView.as_view(), name='userMypage'),
+    path('admin/mypage/', FarmAdminMypageListView.as_view(), name='adminMypage'),
+    path('admin/mypage/detail', FarmAdminMypageDetailView.as_view(), name='adminMypageDetail'),
 ]
