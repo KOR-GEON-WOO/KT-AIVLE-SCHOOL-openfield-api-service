@@ -10,6 +10,8 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 class UserCreateAPIView(APIView):
     def post(self, request):
@@ -49,3 +51,14 @@ class UserLogoutAPIView(APIView):
             return Response({'detail': '사용자의 로그아웃이 완료되었습니다.'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# TODO: 관리자 유무 말고 다른 거 필요하면 추가
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class UserAuthorizationView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        return Response({
+            'is_staff': user.is_staff,
+        })
