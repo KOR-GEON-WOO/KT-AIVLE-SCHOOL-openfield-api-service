@@ -61,4 +61,5 @@ class UserAuthorizationView(APIView):
         user = request.user
         return Response({
             'is_staff': user.is_staff,
+            'is_login': user.is_authenticated,
         })
