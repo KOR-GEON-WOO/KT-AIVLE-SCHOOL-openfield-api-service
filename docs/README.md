@@ -73,3 +73,10 @@
   - [x] 관리자 detail page view - 불법 건축물 -> 불법 건축물 확인 필요 
   - [x] 관리자 mypage - 유휴 농지 임대 신청 리스트 
   - [x] 사용자 mypage - 그 사용자와 관련된 농지의 로그
+- [ ] 변화탐지 모델 적용
+  - [x] 변화탐지 모델 테이블 생성 - farm_id, farm_change_detection_image
+  - [x] 변화탐지LOG 모델 테이블 생성 - farm_id, farm_change_detection_result_image, change_rating_result
+  - [ ] 변화탐지 모델을 함수로 구현 할 수 있다. 
+  - [ ] 변화탐지 모델을 view post 접근시 적용가능  -> 로그를 쌓아준다. 
+  - [ ] 관리자가 변화탐지 모델을 적용한 결과를 view 로 반환 가능하다 ( 변화탐지 이미지 결과 및 원본 모두 제공)
+- [ ] 유휴농지 폴리곤 데이터 추가해서 영역 그리기  
