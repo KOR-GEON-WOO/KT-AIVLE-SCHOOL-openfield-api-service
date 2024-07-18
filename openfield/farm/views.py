@@ -1,5 +1,7 @@
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
+from rest_framework import status
+from rest_framework.response import Response
 from django.db.models import OuterRef, Subquery
 from datetime import datetime
 from .models import Farm, FarmStatusLog
@@ -78,35 +80,35 @@ class FarmUserListView(generics.ListAPIView):
         queryset = get_user_farms()
         return queryset
 
-# 사용자 detail view
+# # 사용자 detail view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
 class FarmUserDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    
-    # TODO: 고쳐야 할 수 있음 (admin과 동일)
     serializer_class = FarmDetailSerializer
+    
     def get_queryset(self):
         queryset = get_user_farms()
         return queryset
     
     def post(self, request, *args, **kwargs):
-        #TODO: 가장 최근 farm_status 로그가 상태가 1인지 확인 하기! 
-        latest_status_id = request.data.get('farm_status_log_id')
-        queryset = FarmStatusLog.objects.filter(farm_status_log_id=latest_status_id)
-
-        if queryset.exists():
-            user_id = request.user.id
-            farm_id = self.kwargs.get('pk')
+        user_id = request.user.id
+        farm_id = self.kwargs.get('pk')
+        try:
             farm = Farm.objects.get(pk=farm_id)
-    
-            # FarmStatusLog 객체 생성
+            recent_log = FarmStatusLog.objects.filter(farm=farm).order_by('-farm_created').first()
+            if recent_log and recent_log.farm_status != 1:
+                return Response({'msg': 'The latest farm status is not 1.'}, status=status.HTTP_400_BAD_REQUEST)
+
             FarmStatusLog.objects.create(
                 farm=farm,
                 farm_status=2,
                 user_id=user_id
             )
-        else:
-            pass
+            return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
+        except Farm.DoesNotExist:
+            return Response({'msg': 'Farm not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'msg': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # 사용자 mypage list view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -135,24 +137,24 @@ class FarmAdminMypageDetailView(generics.RetrieveAPIView):
     serializer_class = FarmStatusLogMypageSerializer
     
     def post(self, request):
-        
-        user_id=request.data.get("user_id")
-        latest_status_log=request.data.get("farm_status_log_id")
-        queryset = FarmStatusLog.objects.filter(farm_status_log_id=latest_status_log)
-        if queryset.exists():
-            # user_id = request.user.id 위에 있는 user_id 겹침
-            farm_id = self.kwargs.get('pk')
+        user_id = request.data.get("user_id")
+        farm_id = self.kwargs.get('pk')
+        try:
             farm = Farm.objects.get(pk=farm_id)
-    
-            # FarmStatusLog 객체 생성
+            recent_log = FarmStatusLog.objects.filter(farm=farm).order_by('-farm_created').first()
+            if recent_log and recent_log.farm_status != 2:
+                return Response({'msg': 'The latest farm status is not 1.'}, status=status.HTTP_400_BAD_REQUEST)
+
             FarmStatusLog.objects.create(
                 farm=farm,
                 farm_status=3,
                 user_id=user_id
             )
-        else:
-            pass
-        return
+            return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
+        except Farm.DoesNotExist:
+            return Response({'msg': 'Farm not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'msg': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def get_user_farms():
     latest_farm_status_log = FarmStatusLog.objects.filter(
