@@ -143,11 +143,31 @@ class FarmAdminMypageDetailView(generics.RetrieveAPIView):
             farm = Farm.objects.get(pk=farm_id)
             recent_log = FarmStatusLog.objects.filter(farm=farm).order_by('-farm_created').first()
             if recent_log and recent_log.farm_status != 2:
-                return Response({'msg': 'The latest farm status is not 1.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'msg': 'The latest farm status is not 2.'}, status=status.HTTP_400_BAD_REQUEST)
 
             FarmStatusLog.objects.create(
                 farm=farm,
                 farm_status=3,
+                user_id=user_id
+            )
+            return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
+        except Farm.DoesNotExist:
+            return Response({'msg': 'Farm not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'msg': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def delete(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        farm_id = self.kwargs.get('pk')
+        try:
+            farm = Farm.objects.get(pk=farm_id)
+            recent_log = FarmStatusLog.objects.filter(farm=farm).order_by('-farm_created').first()
+            if recent_log and recent_log.farm_status != 2:
+                return Response({'msg': 'The latest farm status is not 2.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            FarmStatusLog.objects.create(
+                farm=farm,
+                farm_status=1,
                 user_id=user_id
             )
             return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
