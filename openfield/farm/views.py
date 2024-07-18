@@ -136,7 +136,7 @@ class FarmAdminMypageDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = FarmStatusLogMypageSerializer
     
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         user_id = request.data.get("user_id")
         farm_id = self.kwargs.get('pk')
         try:
