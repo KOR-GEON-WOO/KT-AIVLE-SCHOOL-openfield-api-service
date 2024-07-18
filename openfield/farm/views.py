@@ -128,7 +128,17 @@ class FarmAdminMypageListView(generics.ListAPIView):
     serializer_class = FarmStatusLogMypageSerializer
     
     def get_queryset(self):
-        queryset = FarmStatusLog.objects.filter(farm_status=2).all() 
+        # queryset = FarmStatusLog.objects.filter(farm_status=2).all() 
+        # return queryset
+        latest_logs = FarmStatusLog.objects.filter(
+            farm=OuterRef('farm')
+        ).order_by('-farm_created')
+        
+        queryset = FarmStatusLog.objects.filter(
+            farm_status=2,
+            farm_created=Subquery(latest_logs.values('farm_created')[:1])
+        )
+        
         return queryset
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
