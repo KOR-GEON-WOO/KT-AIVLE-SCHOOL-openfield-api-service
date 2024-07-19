@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from .models import CustomUser
 
 class UserCreateAPIView(APIView):
     def post(self, request):
@@ -63,3 +64,11 @@ class UserAuthorizationView(APIView):
             'is_staff': user.is_staff,
             'is_login': user.is_authenticated,
         })
+        
+class UserisExistView(APIView):
+    def get(self, request):
+        username = request.query_params.get('username', '')
+        
+        if CustomUser.objects.filter(username=username).exists():
+            return Response({'isExist': True}, status=status.HTTP_200_OK)
+        return Response({'isExist': False}, status=status.HTTP_200_OK)
