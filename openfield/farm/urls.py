@@ -13,4 +13,5 @@ urlpatterns = [
     path('user/mypage/', FarmUserMypageListView.as_view(), name='userMypage'),
     path('admin/mypage/', FarmAdminMypageListView.as_view(), name='adminMypage'),
     path('admin/mypage/detail/<int:pk>/', FarmAdminMypageDetailView.as_view(), name='adminMypageDetail'),
+    path('cddetail/<int:pk>/', FarmChangeDetectionView.as_view(), name='cdDetail'),
 ]

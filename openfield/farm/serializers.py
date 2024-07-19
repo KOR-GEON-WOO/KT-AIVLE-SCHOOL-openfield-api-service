@@ -51,3 +51,25 @@ class FarmPolygonDetectionDetailSerializer(serializers.ModelSerializer):
         model = Farm
         fields = ['farm_id', 'farm_owner', 'latitude', 'longitude',
                   'farm_name', 'farm_size', 'pd_image', 'status_logs']
+        
+class FarmChangeDetectionSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = FarmChangeDetection
+        fields='__all__'
+
+class FarmChangeDetectionLogSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = FarmChangeDetectionLog
+        fields='__all__'
+        
+class FarmChangeDetectionLogDetailSerializer(serializers.ModelSerializer):
+    
+    cd=FarmChangeDetectionSerializer(many=True,read_only=True)
+    cd_log=FarmChangeDetectionLogSerializer(many=True,read_only=True)
+
+    class Meta:
+        model = Farm
+        fields = ['cd_log', 'cd']  
+        #( 변화된 결과 이미지 1,2 변화율1, 변화율2, 평균 변화율 , 위성사진 (20, 21))

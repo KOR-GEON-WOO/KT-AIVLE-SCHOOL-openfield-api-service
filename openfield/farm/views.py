@@ -9,6 +9,8 @@ from .serializers import *
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .utils import makeChangeRate
+
 
 # 페이지네이션 설정
 class FarmPagination(PageNumberPagination):
@@ -49,6 +51,11 @@ class FarmAdminDetailView(generics.RetrieveAPIView):
     
     serializer_class = FarmDetailSerializer
     queryset = Farm.objects.filter(farmillegalbuildinglog__farm_illegal_building_status=0)
+    
+    def post(self, request, *args, **kwargs):
+        farm_id = self.kwargs.get('pk')
+        makeChangeRate(farm_id)
+        return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
 
 # 불법건축물 list view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -156,6 +163,14 @@ class FarmAdminMypageDetailView(generics.RetrieveAPIView):
         except Exception as e:
             return Response({'msg': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class FarmChangeDetectionView(generics.RetrieveAPIView):
+    permission_classes=[IsAdminUser]
+    serializer_class = FarmChangeDetectionLogDetailSerializer
+    queryset = Farm.objects.all()
+    
+    
+    
 def get_user_farms():
     latest_farm_status_log = FarmStatusLog.objects.filter(
         farm=OuterRef('pk')

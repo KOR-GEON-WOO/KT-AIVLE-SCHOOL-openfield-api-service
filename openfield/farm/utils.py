@@ -1,4 +1,3 @@
-from rest_framework.response import Response
 from mySetting import NAVER_API_CLIENT_ID, NAVER_API_CLIENT_SECRET  
 import requests
 import boto3
@@ -20,6 +19,14 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import numpy as np
 import cv2
+from .models import *
+import re
+from shapely.geometry import Polygon
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from collections import Counter
+import tempfile
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +57,14 @@ def get_satellite_image(x, y):
             raise ValueError(error_msg)
 
 def generate_farm_image_filename(instance, filename):
+    new_filename = generate_filename(filename)
+    return os.path.join('farm_image', new_filename)
+
+def generate_filename(filename):
     extension = filename.split('.')[-1]
     date_str = datetime.now().strftime('%Y%m%d')
     new_filename = f"{uuid.uuid4()}_{date_str}.{extension}"
-    return os.path.join('farm_image', new_filename)
+    return new_filename
 
 # S3에서 파일 삭제하는 함수
 def delete_s3_file(file_name):
@@ -124,7 +135,7 @@ def string_to_polygon(polygon_str):
 
 def make_result_df(image):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    saved_model_path = os.path.join(project_root, 'openfield', 'best_pt.pt')
+    saved_model_path = os.path.join(project_root, 'openfield', 'best.pt')
     loaded_model = YOLO(saved_model_path, task='detect')  # 에러 안나는곳 여기까지 확인함 
     predictions = loaded_model.predict(source=image, line_width=2)
     
@@ -190,7 +201,7 @@ def decode_raw_data(raw_data, encoding):
 
 def create_farm(row):
     from .models import Farm  # 지연 로딩
-    farm_owner = row.get('소유구분')
+    farm_owner = row.get('지목') # 100_land.csv 올려서 수정함
     latitude = float(row.get('위도', 0.0))
     longitude = float(row.get('경도', 0.0))
     farm_name = row.get('주소', 'Unknown')
@@ -279,3 +290,182 @@ def save_farm_polygon_image(image, farm):
         farm_pd_image=ContentFile(output.getvalue(), new_filename)
     )
     output.close()
+
+
+def find_vector_set(diff_image, new_size):
+    i = 0
+    j = 0
+    vector_set = np.zeros((int(new_size[0] * new_size[1] / 25), 25))
+    while i < vector_set.shape[0]:
+        while j < new_size[1]:
+            k = 0
+            while k < new_size[0]:
+                block = diff_image[j:j + 5, k:k + 5]
+                feature = block.ravel()
+                vector_set[i, :] = feature
+                k = k + 5
+            j = j + 5
+        i = i + 1
+
+    mean_vec = np.mean(vector_set, axis=0)
+    vector_set = vector_set - mean_vec
+    return vector_set, mean_vec
+
+def find_FVS(EVS, diff_image, mean_vec, new):
+    i = 2
+    feature_vector_set = []
+    while i < new[1] - 2:
+        j = 2
+        while j < new[0] - 2:
+            block = diff_image[i - 2:i + 3, j - 2:j + 3]
+            feature = block.flatten()
+            feature_vector_set.append(feature)
+            j = j + 1
+        i = i + 1
+
+    FVS = np.dot(feature_vector_set, EVS)
+    FVS = FVS - mean_vec
+    return FVS
+
+def clustering(FVS, components, new):
+    kmeans = KMeans(components, verbose = 0)
+    kmeans.fit(FVS)
+    output = kmeans.predict(FVS)
+    count  = Counter(output)
+ 
+    least_index = min(count, key = count.get)
+    change_map  = np.reshape(output,(new[1] - 4, new[0] - 4))
+    return least_index, change_map
+
+
+def perform_pca_and_clustering(image1_path, image2_path):
+    # Read Images
+    image1 = cv2.imread(image1_path)
+    image2 = cv2.imread(image2_path)
+
+    # Resize Images
+    new_size = np.asarray(image1.shape) / 5 
+    new_size = new_size.astype(int)*5
+    image1 = cv2.resize(image1, (new_size[0], new_size[1])).astype(int)
+    image2 = cv2.resize(image2, (new_size[0], new_size[1])).astype(int)
+    
+    # Difference Image  
+    diff_image = np.abs(image1 - image2)  
+
+    # Perform PCA
+    pca = PCA()
+    vector_set, mean_vec = find_vector_set(diff_image[:,:,1], new_size)
+    pca.fit(vector_set)
+    EVS = pca.components_
+
+    # Build Feature Vector Space
+    FVS = find_FVS(EVS, diff_image[:,:,1], mean_vec, new_size)
+
+    # Clustering
+    components = 2
+    kmeans = KMeans(components, verbose=0)
+    kmeans.fit(FVS)
+    output = kmeans.predict(FVS)
+    count = Counter(output)
+    least_index = min(count, key=count.get)
+    change_map = np.reshape(output, (new_size[1] - 4, new_size[0] - 4))
+
+    change_map[change_map == least_index] = 255
+    change_map[change_map != 255] = 0
+    change_map = change_map.astype(np.uint8)
+    
+    image = Image.fromarray(change_map)
+    
+    return image
+
+def save_open_map_image(image_bytes, filename):  #바이트 데이터를 이미지 파일로 저장하여 경로를 반환하는 함수
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+    temp_file.write(image_bytes)
+    temp_file.close()
+    return temp_file.name
+
+def save_image_temp(image_field):  # 이미지 필드를 임시 파일로 저장하여 경로를 반환하는 함수
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+    temp_file.write(image_field.read())
+    temp_file.close()
+    return temp_file.name
+
+def wkt_polygon_to_list(wkt_polygon):
+
+    pattern = r"[-+]?\d*\.\d+|\d+"
+    coords_str = re.findall(pattern, wkt_polygon)
+
+    coords = []
+    for i in range(0, len(coords_str), 2):
+        x = float(coords_str[i])
+        y = float(coords_str[i+1])
+        coords.append([x, y])
+
+    coords.append(coords[0])
+    print(f"coords:{coords}")
+    return coords
+
+def coords_to_string(coords):
+    return ', '.join(f"{x} {y}" for x, y in coords)
+
+def parse_coords_string(coords_str):  
+    coords_pairs = coords_str.split(', ')
+    coordinates = [tuple(map(float, pair.split())) for pair in coords_pairs]
+    return coordinates
+
+def calculate_change_ratio(image, polygon_coords):
+
+    change_map = np.array(image)
+
+    polygon_coords = np.array(polygon_coords, dtype=np.int32)
+
+    polygon_mask = np.zeros_like(change_map, dtype=np.uint8)
+
+    cv2.fillPoly(polygon_mask, [polygon_coords], 255)
+
+    polygon_change = cv2.bitwise_and(change_map, polygon_mask)
+
+    num_white_pixels_polygon = np.count_nonzero(polygon_change == 255)
+    total_pixels_polygon = np.count_nonzero(polygon_mask == 255)
+
+    if total_pixels_polygon > 0:
+        change_ratio_polygon = num_white_pixels_polygon / total_pixels_polygon
+    else:
+        change_ratio_polygon = 0.0
+
+    return change_ratio_polygon
+
+def makeChangeRate(farm_id):
+    from .models import Farm ,FarmChangeDetection,FarmChangeDetectionLog
+    query = FarmChangeDetection.objects.filter(farm_id=farm_id).order_by('farm_change_detection_created')
+    farm_geometry = Farm.objects.filter(farm_id=farm_id).values_list('farm_geometry',flat=True).first() 
+    center_lat = float(Farm.objects.filter(farm_id=farm_id).values('latitude').first()['latitude'])
+    center_lon = float(Farm.objects.filter(farm_id=farm_id).values('longitude').first()['longitude'])
+
+    pixel_polygon = function(center_lat, center_lon, string_to_polygon(farm_geometry))
+    pixel_polygon = list(pixel_polygon.exterior.coords)
+    
+    image_path1 = save_image_temp(query[2].farm_change_detection_image)
+    image_path2 = save_image_temp(query[1].farm_change_detection_image)
+    image_path3 = save_image_temp(query[0].farm_change_detection_image)
+
+    open_map_image1 = perform_pca_and_clustering(image_path1, image_path2)
+    open_map_image2 = perform_pca_and_clustering(image_path2, image_path3) 
+
+    change_ratio1 = calculate_change_ratio(open_map_image1, pixel_polygon)   # 
+    change_ratio2 = calculate_change_ratio(open_map_image2, pixel_polygon)
+    result = ((change_ratio1 + change_ratio2) / 2) * 100
+
+    output1=BytesIO()
+    output2=BytesIO()
+    open_map_image1.save(output1,format='JPEG')
+    open_map_image2.save(output2,format='JPEG')
+
+    FarmChangeDetectionLog.objects.create(
+        farm_id=farm_id,
+        farm_change_detection_result_image1=ContentFile(output1.getvalue(), f"farm_image_1_{farm_id}.png"),
+        farm_change_detection_result_image2=ContentFile(output2.getvalue(), f"farm_image_2_{farm_id}.png"),
+        change_rating1=change_ratio1,
+        change_rating2=change_ratio2,
+        change_rating_result=result,
+    )

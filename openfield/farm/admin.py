@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Farm, FarmStatusLog, FarmImage, FarmPolygonDetectionImage, FarmIllegalBuildingLog
+from .models import Farm, FarmStatusLog, FarmImage, FarmPolygonDetectionImage, FarmIllegalBuildingLog, FarmChangeDetection ,FarmChangeDetectionLog 
 from django.http import HttpResponseRedirect
 from decimal import Decimal
 from django import forms
@@ -95,4 +95,15 @@ class FarmPolygonDetectionImageAdmin(admin.ModelAdmin):
 @admin.register(FarmIllegalBuildingLog)
 class FarmIllgalBuildingLogAdmin(admin.ModelAdmin):
     list_display = ('farm', 'farm_illegal_building_status')
+
+@admin.register(FarmChangeDetection)
+class FarmChangeDetectionAdmin(admin.ModelAdmin):
+    list_display = ('farm', 'farm_change_detection_image','farm_change_detection_created')
+    search_fields = ('farm__name',)
+
+@admin.register(FarmChangeDetectionLog)
+class FarmChangeDetectionLogAdmin(admin.ModelAdmin):
+    list_display = ('farm', 'farm_change_detection_result_image1', 'farm_change_detection_result_image2','change_rating1','change_rating2','change_rating_result')
+    search_fields = ('farm__name',)
+    list_filter = ('change_rating_result',)
     

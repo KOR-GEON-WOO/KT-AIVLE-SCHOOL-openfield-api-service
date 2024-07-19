@@ -14,8 +14,9 @@ class Farm(models.Model):
     farm_name = models.CharField(max_length=255, default='Unknown')  
     farm_size = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
     farm_geometry = models.CharField(max_length=255 ,default='') # 폴리곤 객체를 넣을거면 포스트큐엘 쓰라고 해서 string 넣음
+    
     def __str__(self):
-        return self.farm_owner
+        return str(self.farm_id)
 
 class FarmStatusLog(models.Model):
     farm_status_log_id = models.AutoField(primary_key=True)
@@ -53,6 +54,32 @@ class FarmPolygonDetectionImage(models.Model):
     farm = models.OneToOneField(Farm, related_name='pd_image', on_delete=models.CASCADE)
     farm_pd_image = models.ImageField(upload_to=generate_farm_image_filename,blank=True)
 
+class FarmChangeDetection(models.Model):
+    farm = models.ForeignKey(Farm, related_name='cd',on_delete=models.CASCADE)
+    farm_change_detection_image = models.ImageField(upload_to=generate_farm_image_filename,blank=True)
+    farm_change_detection_created = models.DateTimeField(auto_now_add=True)
+    
+class FarmChangeDetectionLog(models.Model):
+    farm=models.ForeignKey(Farm,related_name='cd_log',on_delete=models.CASCADE)
+    farm_change_detection_result_image1=models.ImageField(upload_to=generate_farm_image_filename,blank=True)
+    farm_change_detection_result_image2=models.ImageField(upload_to=generate_farm_image_filename,blank=True)
+    change_rating1 = models.FloatField()
+    change_rating2 = models.FloatField()
+    change_rating_result = models.FloatField()
+
+    
+# S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
+@receiver(pre_delete, sender=FarmChangeDetection)
+def delete_s3_file_on_delete(sender, instance, **kwargs):
+    if instance.farm_change_detection_image:
+        delete_s3_file(instance.farm_change_detection_image.name)
+
+# S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
+@receiver(pre_delete, sender=FarmChangeDetectionLog)
+def delete_s3_file_on_delete(sender, instance, **kwargs):
+    if instance.farm_change_detection_result_image1 and instance.farm_change_detection_result_image2:
+        delete_s3_file(instance.farm_change_detection_result_image1.name)
+        delete_s3_file(instance.farm_change_detection_result_image2.name)
 
 # S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
 @receiver(pre_delete, sender=FarmImage)
@@ -99,3 +126,43 @@ def delete_s3_file_on_clear(sender, instance, **kwargs):
 
     if not new_file and old_file:  # 이미지가 비워질 때
         delete_s3_file(old_file.name)
+
+# S3에서 파일 삭제하는 신호 처리기 (이미지 필드를 비울 때)
+@receiver(pre_save, sender=FarmChangeDetection)
+def delete_s3_file_on_clear(sender, instance, **kwargs):
+    if not instance.pk:
+        return False  # 새 객체인 경우 무시
+    try:
+        old_instance = FarmChangeDetection.objects.get(pk=instance.pk)
+    except FarmChangeDetection.DoesNotExist:
+        return False
+
+    old_file = old_instance.farm_change_detection_image
+    new_file = instance.farm_change_detection_image
+
+    if not new_file and old_file:  # 이미지가 비워질 때
+        delete_s3_file(old_file.name)
+
+# S3에서 파일 삭제하는 신호 처리기 (이미지 필드를 비울 때)
+@receiver(pre_save, sender=FarmChangeDetectionLog)
+def delete_s3_file_on_clear(sender, instance, **kwargs):
+    if not instance.pk:
+        return False  # 새 객체인 경우 무시
+    try:
+        old_instance = FarmChangeDetectionLog.objects.get(pk=instance.pk)
+    except FarmChangeDetectionLog.DoesNotExist:
+        return False
+
+    old_file1 = old_instance.farm_change_detection_result_image1
+    new_file1 = instance.farm_change_detection_result_image1
+
+    old_file2 = old_instance.farm_change_detection_result_image2
+    new_file2 = instance.farm_change_detection_result_image2
+
+    # Check and delete the first image if it's being cleared
+    if not new_file1 and old_file1:
+        delete_s3_file(old_file1.name)
+
+    # Check and delete the second image if it's being cleared
+    if not new_file2 and old_file2:
+        delete_s3_file(old_file2.name)
