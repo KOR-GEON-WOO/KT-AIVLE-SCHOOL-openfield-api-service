@@ -354,12 +354,13 @@ def perform_pca_and_clustering(image1_path, image2_path):
 
     # Perform PCA
     pca = PCA()
-    vector_set, mean_vec = find_vector_set(diff_image[:,:,1], new_size)
+    diff_image=diff_image[:,:,1]
+    vector_set, mean_vec = find_vector_set(diff_image, new_size)
     pca.fit(vector_set)
     EVS = pca.components_
 
     # Build Feature Vector Space
-    FVS = find_FVS(EVS, diff_image[:,:,1], mean_vec, new_size)
+    FVS = find_FVS(EVS, diff_image, mean_vec, new_size)
 
     # Clustering
     components = 2
@@ -452,7 +453,7 @@ def makeChangeRate(farm_id):
     open_map_image1 = perform_pca_and_clustering(image_path1, image_path2)
     open_map_image2 = perform_pca_and_clustering(image_path2, image_path3) 
 
-    change_ratio1 = calculate_change_ratio(open_map_image1, pixel_polygon)   # 
+    change_ratio1 = calculate_change_ratio(open_map_image1, pixel_polygon)  
     change_ratio2 = calculate_change_ratio(open_map_image2, pixel_polygon)
     result = ((change_ratio1 + change_ratio2) / 2) * 100
 
