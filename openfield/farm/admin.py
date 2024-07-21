@@ -103,7 +103,7 @@ class FarmChangeDetectionAdmin(admin.ModelAdmin):
 
 @admin.register(FarmChangeDetectionLog)
 class FarmChangeDetectionLogAdmin(admin.ModelAdmin):
-    list_display = ('farm', 'farm_change_detection_result_image1', 'farm_change_detection_result_image2','change_rating1','change_rating2','change_rating_result')
+    list_display = ('farm', 'farm_change_detection_result_image1', 'farm_change_detection_result_image2','change_rating1','change_rating2','change_rating_result','farm_change_detection_log_created')
     search_fields = ('farm__name',)
     list_filter = ('change_rating_result',)
     

@@ -2,9 +2,8 @@ from django.db import models
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch import receiver
-import logging
 from .utils import delete_s3_file, generate_farm_image_filename
-logger = logging.getLogger(__name__)
+
 
 class Farm(models.Model):
     farm_id = models.AutoField(primary_key=True)
@@ -39,7 +38,6 @@ class FarmImage(models.Model):
     farm_image = models.ImageField(upload_to=generate_farm_image_filename, blank=True)
 
 # TODO: Object detection 결과 (x, y좌표와 레이블 값이 담긴 text) 컬럼 필요
-# x, y, conf, class 어떻게 저장해야할까
 class FarmObjectDetectionImage(models.Model):
     farm = models.ForeignKey(Farm, related_name='od_image', on_delete=models.CASCADE)
     farm_object_x = models.FloatField()
@@ -66,6 +64,7 @@ class FarmChangeDetectionLog(models.Model):
     change_rating1 = models.FloatField()
     change_rating2 = models.FloatField()
     change_rating_result = models.FloatField()
+    farm_change_detection_log_created = models.DateTimeField(auto_now_add=True)
 
     
 # S3에서 파일 삭제하는 신호 처리기 (삭제할 때)
