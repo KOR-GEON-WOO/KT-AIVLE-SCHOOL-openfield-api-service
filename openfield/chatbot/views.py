@@ -62,7 +62,6 @@ class ChatAPIView(APIView):
             print("count1:",ChatAPIView.count)
             if self.database.get()['ids'] is not None:    
                 score = self.database.similarity_search_with_score(query)[0][1] # 유사도가 가장 높은 Document 중 유사도 점수만 선택
-                #print('score:', score)
                 if score > 0.2:  # 코사인 유사도 0에 가까울 수록 유사도가 높음. 유사도가 높지 않은 질문을 할 수록 count증가
                     ChatAPIView.count += 1
                     #print("count:",ChatAPIView.count)
@@ -89,10 +88,7 @@ class ChatAPIView(APIView):
 
         # 대화 기록을 업데이트합니다.
         request.session['chat_history'] = chat_history
-        
-        #print("##############Chat##############")
-        #print(request.session.items())
-        
+
         UsageLog.objects.create(question=query, answer=result["result"])
         # 클라이언트에 대답을 반환합니다.
         response = Response({'result': result['result']}, status=status.HTTP_200_OK)
@@ -103,6 +99,4 @@ class ChatAPIView(APIView):
 class SessionClearAPIView(APIView):
     def get(self, request):
         request.session.flush()
-        #print("##############clear##############")
-        #print(request.session.items())
         return Response({'status': 'success', 'message': 'Session cleared successfully.'})
