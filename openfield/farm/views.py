@@ -99,19 +99,6 @@ class FarmUserDetailView(generics.RetrieveAPIView):
     
     def get_queryset(self):
         queryset = get_user_farms()
-        threshold = 0.09
-        
-        latest_change_detection_log = FarmChangeDetectionLog.objects.filter(
-            farm=OuterRef('pk')
-        ).order_by('-farm_change_detection_log_created').values('change_rating_result')[:1]
-
-        queryset = queryset.annotate(
-            latest_change_rating_result=Subquery(latest_change_detection_log)
-        ).filter(
-            latest_change_rating_result__isnull=False
-        ).filter(
-            latest_change_rating_result__lte=threshold
-        )
         return queryset
     
     def post(self, request, *args, **kwargs):
@@ -219,18 +206,30 @@ class FarmChangeDetectionView(generics.RetrieveAPIView):
     
     
 def get_user_farms():
+    threshold = 0.09
+    
     latest_farm_status_log = FarmStatusLog.objects.filter(
         farm=OuterRef('pk')
     ).order_by('-farm_created').values('farm_status')[:1]
+    
+    latest_change_detection_log = FarmChangeDetectionLog.objects.filter(
+        farm=OuterRef('pk')
+    ).order_by('-farm_change_detection_log_created').values('change_rating_result')[:1]
 
-    # Step 2: 쿼리셋 구성
-    # FarmIllegalBuildingLog에서 farm_illegal_building_status가 0인 Farm 객체를 가져옴
     queryset = Farm.objects.filter(
         farmillegalbuildinglog__farm_illegal_building_status=0
     ).annotate(
         latest_status=Subquery(latest_farm_status_log)
     ).filter(
         latest_status=1
+    )
+
+    queryset = queryset.annotate(
+        latest_change_rating_result=Subquery(latest_change_detection_log)
+    ).filter(
+        latest_change_rating_result__isnull=False
+    ).filter(
+        latest_change_rating_result__lte=threshold
     )
     
     return queryset
