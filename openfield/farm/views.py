@@ -54,8 +54,12 @@ class FarmAdminDetailView(generics.RetrieveAPIView):
     
     def post(self, request, *args, **kwargs):
         farm_id = self.kwargs.get('pk')
-        makeChangeRate(farm_id)
-        return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
+        has_change_detection = FarmChangeDetection.objects.filter(farm_id=farm_id).exists()
+        
+        if has_change_detection:
+            makeChangeRate(farm_id)
+            return Response({'msg': 'success'}, status=status.HTTP_201_CREATED)
+        return Response({'msg': 'no satellite imgs in the land'}, status=status.HTTP_404_NOT_FOUND)
 
 # 불법건축물 list view
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -95,6 +99,19 @@ class FarmUserDetailView(generics.RetrieveAPIView):
     
     def get_queryset(self):
         queryset = get_user_farms()
+        threshold = 0.09
+        
+        latest_change_detection_log = FarmChangeDetectionLog.objects.filter(
+            farm=OuterRef('pk')
+        ).order_by('-farm_change_detection_log_created').values('change_rating_result')[:1]
+
+        queryset = queryset.annotate(
+            latest_change_rating_result=Subquery(latest_change_detection_log)
+        ).filter(
+            latest_change_rating_result__isnull=False
+        ).filter(
+            latest_change_rating_result__lte=threshold
+        )
         return queryset
     
     def post(self, request, *args, **kwargs):
