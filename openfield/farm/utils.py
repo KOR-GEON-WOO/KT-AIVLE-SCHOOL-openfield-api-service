@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 from django.conf import settings
 from django.contrib import messages
-from PIL import Image,UnidentifiedImageError
+from PIL import Image,UnidentifiedImageError,ImageDraw
 from ultralytics import YOLO
 from pyproj import Transformer
 import math
@@ -128,6 +128,7 @@ def function(center_lat, center_lon, coords):
 
     return polygon
 
+
 def string_to_polygon(polygon_str):
     coordinates = polygon_str.replace('POLYGON ((', '').replace('))', '').replace(')', '').replace('(', '').split(', ')
     coordinates = [tuple(map(float, coord.split())) for coord in coordinates]
@@ -136,7 +137,7 @@ def string_to_polygon(polygon_str):
 def make_result_df(image):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     saved_model_path = os.path.join(project_root, 'openfield', 'best.pt')
-    loaded_model = YOLO(saved_model_path, task='detect')  # 에러 안나는곳 여기까지 확인함 
+    loaded_model = YOLO(saved_model_path, task='detect')   
     predictions = loaded_model.predict(source=image, line_width=2)
     
     data_rows = []
@@ -230,20 +231,21 @@ def create_farm_status_log(farm, row):
 def process_farm_images(self, request, farm, row):
     from .models import FarmImage # 지연 로딩
     try:
+        polygon = polygon_function(farm.latitude, farm.longitude, farm.farm_geometry)
         image_content = get_satellite_image(farm.longitude, farm.latitude)
         image = Image.open(BytesIO(image_content))
-
+        image_content = polygon_draw_image(image_content,polygon) # polygon
+        
         FarmImage.objects.create(
             farm=farm,
             farm_image=ContentFile(image_content, f"farm_image_{farm.farm_id}.jpg")
         )
-
-        polygon = polygon_function(farm.latitude, farm.longitude, farm.farm_geometry)
         model_result_df = make_result_df(image)
         model_result_df['inside_polygon'] = None
 
         image = draw_detected_objects(image, model_result_df, polygon, farm)
-        save_farm_polygon_image(image, farm)
+        polygon_draw=polygon_draw_image(image,polygon)  # polygon
+        save_farm_polygon_image(polygon_draw, farm)
 
     except UnidentifiedImageError:
         self.message_user(request, "이미지를 열 수 없습니다. 파일이 손상되었거나 지원되지 않는 형식일 수 있습니다.", level=messages.ERROR)
@@ -280,11 +282,13 @@ def update_farm_illegal_building_log(df_row, farm, cnt):
         cnt = 1
     return cnt
 
-def save_farm_polygon_image(image, farm):
+def save_farm_polygon_image(image_bytes, farm):
     from .models import FarmPolygonDetectionImage  # 지연 로딩
+    image = Image.open(BytesIO(image_bytes))
     output = BytesIO()
     image.save(output, format='JPEG')
     new_filename = f"{farm.farm_id}_{datetime.now().strftime('%Y%m%d')}.jpg"
+    # TODO: 여기 이미지 저장 
     FarmPolygonDetectionImage.objects.create(
         farm=farm,
         farm_pd_image=ContentFile(output.getvalue(), new_filename)
@@ -470,3 +474,25 @@ def makeChangeRate(farm_id):
         change_rating2=change_ratio2,
         change_rating_result=result,
     )
+
+def polygon_draw_image(image, polygon,):
+    if isinstance(image, bytes):
+        image_bytes = BytesIO(image)
+        satellite_image = Image.open(image_bytes)
+    else:
+        satellite_image = image
+    polygon_coords = list(polygon.exterior.coords)
+    draw = ImageDraw.Draw(satellite_image)
+    line_width = 1       # 라인 두께를 지정합니다
+     
+    for i in range(len(polygon_coords)):
+        start_point = polygon_coords[i]
+        end_point = polygon_coords[(i + 1) % len(polygon_coords)]
+        draw.line([start_point, end_point], fill="yellow", width=line_width)
+ 
+    output_bytes = BytesIO()
+    satellite_image.save(output_bytes, format='PNG')
+    output_bytes.seek(0)
+    original_image_bytes = output_bytes.getvalue()
+ 
+    return original_image_bytes

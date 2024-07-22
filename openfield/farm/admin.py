@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Farm, FarmStatusLog, FarmImage, FarmPolygonDetectionImage, FarmIllegalBuildingLog, FarmChangeDetection ,FarmChangeDetectionLog 
 from django.http import HttpResponseRedirect
-from decimal import Decimal
 from django import forms
 from django.urls import path
 from django.shortcuts import render
