@@ -206,7 +206,7 @@ class FarmChangeDetectionView(generics.RetrieveAPIView):
     
     
 def get_user_farms():
-    threshold = 0.09
+    threshold = 9
     
     latest_farm_status_log = FarmStatusLog.objects.filter(
         farm=OuterRef('pk')
