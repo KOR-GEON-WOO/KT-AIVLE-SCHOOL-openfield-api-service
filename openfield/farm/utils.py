@@ -218,10 +218,10 @@ def create_farm(row):
         farm_geometry=farm_geometry,
     )
 
-def create_farm_status_log(farm, row):
+def create_farm_status_log(farm, status, user_id):
     from .models import FarmStatusLog  # 지연 로딩
-    farm_status = int(row.get('상태', 1))
-    user_id = int(row.get('사용자', 1))
+    farm_status = int(status)
+    user_id = int(user_id)
     FarmStatusLog.objects.create(
         farm=farm,
         farm_status=farm_status,
@@ -474,6 +474,9 @@ def makeChangeRate(farm_id):
         change_rating2=change_ratio2,
         change_rating_result=result,
     )
+    
+    farm = Farm.objects.get(farm_id=farm_id)
+    create_farm_status_log(farm, 1, 1)
 
 def polygon_draw_image(image, polygon,):
     if isinstance(image, bytes):
