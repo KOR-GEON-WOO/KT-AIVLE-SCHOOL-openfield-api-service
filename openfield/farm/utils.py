@@ -459,7 +459,7 @@ def makeChangeRate(farm_id):
 
     change_ratio1 = calculate_change_ratio(open_map_image1, pixel_polygon)  
     change_ratio2 = calculate_change_ratio(open_map_image2, pixel_polygon)
-    result = change_ratio1 if change_ratio1 > change_ratio2 else change_ratio2
+    result = change_ratio1 * 100 if change_ratio1 > change_ratio2 else change_ratio2 * 100
 
     output1=BytesIO()
     output2=BytesIO()
