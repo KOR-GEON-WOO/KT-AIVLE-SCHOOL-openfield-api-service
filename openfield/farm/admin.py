@@ -54,7 +54,7 @@ class FarmAdmin(admin.ModelAdmin):
 
                 for row in csv.DictReader(file_data):
                     farm = create_farm(row)
-                    create_farm_status_log(farm, row)
+                    create_farm_status_log(farm, 0, 1)
                     process_farm_images(self, request, farm, row)
 
                 self.message_user(request, "CSV 파일 업로드 성공!", level=messages.SUCCESS)

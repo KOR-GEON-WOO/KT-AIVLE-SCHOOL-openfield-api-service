@@ -68,10 +68,10 @@ def create_farm(row):                                # farm 생성하기
         farm_geometry=farm_geometry,
     )
 
-def create_farm_status_log(farm, row):             # farm log 생성하기 
+def create_farm_status_log(farm, status, user_id):
     from .models import FarmStatusLog  # 지연 로딩
-    farm_status = int(row.get('상태', 1))
-    user_id = int(row.get('사용자', 1))
+    farm_status = int(status)
+    user_id = int(user_id)
     FarmStatusLog.objects.create(
         farm=farm,
         farm_status=farm_status,
