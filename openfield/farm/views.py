@@ -9,7 +9,7 @@ from .serializers import *
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from .utils import makeChangeRate
+from .detectChangeService import makeChangeRate
 
 
 # 페이지네이션 설정

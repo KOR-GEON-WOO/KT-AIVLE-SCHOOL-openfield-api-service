@@ -6,7 +6,8 @@ from django.urls import path
 from django.shortcuts import render
 from django.contrib import messages
 import csv
-from .utils import csv_exception,read_csv_file,preprocess_dataframe,decode_raw_data,create_farm,create_farm_status_log,process_farm_images
+from .createService import create_farm,create_farm_status_log,process_farm_images
+from .csvService import csv_exception,read_csv_file,preprocess_dataframe,decode_raw_data
 
 class CSVUploadForm(forms.Form):
     csv_file = forms.FileField()
@@ -53,7 +54,7 @@ class FarmAdmin(admin.ModelAdmin):
 
                 for row in csv.DictReader(file_data):
                     farm = create_farm(row)
-                    create_farm_status_log(farm, 0, 1)
+                    create_farm_status_log(farm, row)
                     process_farm_images(self, request, farm, row)
 
                 self.message_user(request, "CSV 파일 업로드 성공!", level=messages.SUCCESS)

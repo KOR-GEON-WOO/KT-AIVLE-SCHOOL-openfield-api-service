@@ -2,7 +2,8 @@ from django.db import models
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch import receiver
-from .utils import delete_s3_file, generate_farm_image_filename
+from .utils import delete_s3_file
+from .createService import generate_farm_image_filename
 
 
 class Farm(models.Model):
