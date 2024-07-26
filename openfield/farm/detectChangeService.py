@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from collections import Counter
 import tempfile
 from .utils import string_to_polygon,function
+from .createService import create_farm_status_log
 
 def save_open_map_image(image_bytes, filename):  #바이트 데이터를 이미지 파일로 저장하여 경로를 반환하는 함수
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
@@ -165,3 +166,5 @@ def makeChangeRate(farm_id):                         # 변화탐지
         change_rating2=change_ratio2,
         change_rating_result=result,
     )
+    farm = Farm.objects.get(farm_id=farm_id)
+    create_farm_status_log(farm, 1, 1)
