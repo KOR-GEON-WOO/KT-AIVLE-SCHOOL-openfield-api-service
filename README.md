@@ -8,7 +8,7 @@
 <br >
 
 # 🧑🏻‍🌾 사이트
-#### 웹사이트: http://nongbu20.kro.kr/
+#### 웹사이트: http://nongbu20.kro.kr/ 현재 (2024년 10월 16일) 서비스 종료
 관리자 ID: admin
 <br />
 관리자 PW: aivle202405!!
